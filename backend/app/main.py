@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from app.config import settings
+from app.routers import system
 
 
 app = FastAPI(
@@ -10,18 +11,12 @@ app = FastAPI(
 )
 
 
+app.include_router(system.router, prefix=settings.api_prefix)
+
+
 @app.get("/")
 def root():
     return {
         "message": "Welcome to DocuMind AI",
         "status": "running",
-    }
-
-
-@app.get("/health")
-def health_check():
-    return {
-        "status": "healthy",
-        "app_name": settings.app_name,
-        "environment": settings.environment,
     }
