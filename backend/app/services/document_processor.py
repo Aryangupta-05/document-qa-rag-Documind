@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from docx import Document as WordDocument
 from pypdf import PdfReader
 
 
@@ -13,6 +14,9 @@ class DocumentProcessor:
 
         if extension == ".pdf":
             return DocumentProcessor._extract_from_pdf(file_path)
+
+        if extension == ".docx":
+            return DocumentProcessor._extract_from_docx(file_path)
 
         raise ValueError(f"Text extraction is not implemented for {extension} files yet.")
 
@@ -32,3 +36,16 @@ class DocumentProcessor:
                 pages_text.append(text)
 
         return "\n\n".join(pages_text).strip()
+
+    @staticmethod
+    def _extract_from_docx(file_path: Path) -> str:
+        document = WordDocument(file_path)
+        paragraphs = []
+
+        for paragraph in document.paragraphs:
+            text = paragraph.text.strip()
+
+            if text:
+                paragraphs.append(text)
+
+        return "\n\n".join(paragraphs).strip()
