@@ -3,6 +3,8 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.services.document_processor import DocumentProcessor
+
 from app.config import settings
 from app.database import get_db
 from app.models.document import Document
@@ -52,5 +54,14 @@ def upload_document(
     db.add(document)
     db.commit()
     db.refresh(document)
+
+    if extension == ".txt":
+        extracted_text = DocumentProcessor.extract_text(file_path)
+
+        document.status = "processed"
+        document.char_count = len(extracted_text)
+
+        db.commit()
+        db.refresh(document)
 
     return document
