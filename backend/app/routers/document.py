@@ -55,7 +55,7 @@ def upload_document(
     db.commit()
     db.refresh(document)
 
-    if extension == ".txt":
+    if extension in {".txt", ".pdf"}:
         extracted_text = DocumentProcessor.extract_text(file_path)
 
         document.status = "processed"
