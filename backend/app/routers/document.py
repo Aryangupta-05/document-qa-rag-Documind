@@ -55,13 +55,12 @@ def upload_document(
     db.commit()
     db.refresh(document)
 
-    if extension in {".txt", ".pdf",".docx"}:
-        extracted_text = DocumentProcessor.extract_text(file_path)
+    extracted_text = DocumentProcessor.extract_text(file_path)
 
-        document.status = "processed"
-        document.char_count = len(extracted_text)
+    document.status = "processed"
+    document.char_count = len(extracted_text)
 
-        db.commit()
-        db.refresh(document)
+    db.commit()
+    db.refresh(document)
 
     return document

@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from bs4 import BeautifulSoup
 from docx import Document as WordDocument
 from pypdf import PdfReader
 
@@ -17,6 +18,12 @@ class DocumentProcessor:
 
         if extension == ".docx":
             return DocumentProcessor._extract_from_docx(file_path)
+
+        if extension == ".md":
+            return DocumentProcessor._extract_from_markdown(file_path)
+
+        if extension == ".html":
+            return DocumentProcessor._extract_from_html(file_path)
 
         raise ValueError(f"Text extraction is not implemented for {extension} files yet.")
 
@@ -49,3 +56,17 @@ class DocumentProcessor:
                 paragraphs.append(text)
 
         return "\n\n".join(paragraphs).strip()
+
+    @staticmethod
+    def _extract_from_markdown(file_path: Path) -> str:
+        return file_path.read_text(encoding="utf-8").strip()
+
+    @staticmethod
+    def _extract_from_html(file_path: Path) -> str:
+        html = file_path.read_text(encoding="utf-8")
+        soup = BeautifulSoup(html, "html.parser")
+
+        for element in soup(["script", "style"]):
+            element.decompose()
+
+        return soup.get_text(separator="\n", strip=True)
