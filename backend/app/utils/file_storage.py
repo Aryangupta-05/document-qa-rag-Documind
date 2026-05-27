@@ -18,3 +18,12 @@ def save_upload(file: UploadFile) -> tuple[str, Path]:
         destination.write(file.file.read())
 
     return file_id, file_path
+
+
+def save_processed_text(document_id: str, text: str) -> Path:
+    settings.processed_dir.mkdir(parents=True, exist_ok=True)
+    processed_path = settings.processed_dir / f"{document_id}.txt"
+
+    processed_path.write_text(text, encoding="utf-8")
+
+    return processed_path

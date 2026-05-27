@@ -9,7 +9,7 @@ from app.config import settings
 from app.database import get_db
 from app.models.document import Document
 from app.schemas.document import DocumentListResponse, DocumentResponse
-from app.utils.file_storage import save_upload
+from app.utils.file_storage import save_upload,save_processed_text
 
 
 router = APIRouter(
@@ -56,6 +56,7 @@ def upload_document(
     db.refresh(document)
 
     extracted_text = DocumentProcessor.extract_text(file_path)
+    save_processed_text(document.id, extracted_text)
 
     document.status = "processed"
     document.char_count = len(extracted_text)
