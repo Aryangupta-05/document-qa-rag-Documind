@@ -11,12 +11,16 @@ from app.models.document import Document
 from app.schemas.document import DocumentListResponse, DocumentResponse
 from app.utils.file_storage import save_upload,save_processed_text
 
+from pydantic import BaseModel
+
+from app.services.chunking import ChunkingService
 
 router = APIRouter(
     prefix="/documents",
     tags=["documents"],
 )
-
+class ChunkTestRequest(BaseModel):
+    text: str
 
 @router.get("", response_model=DocumentListResponse)
 def list_documents(db: Session = Depends(get_db)):
@@ -27,6 +31,16 @@ def list_documents(db: Session = Depends(get_db)):
         "count": len(documents),
     }
 
+@router.post("/test-chunks")
+def test_chunks(request: ChunkTestRequest):
+    chunks = ChunkingService().split_text(request.text)
+
+    return {
+        "chunk_size": settings.chunk_size,
+        "chunk_overlap": settings.chunk_overlap,
+        "chunk_count": len(chunks),
+        "chunks": chunks,
+    }
 
 @router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 def upload_document(
