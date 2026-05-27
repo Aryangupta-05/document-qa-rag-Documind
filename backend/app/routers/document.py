@@ -15,6 +15,8 @@ from pydantic import BaseModel
 
 from app.services.chunking import ChunkingService
 
+from app.services.embedding import get_embedding_service
+
 router = APIRouter(
     prefix="/documents",
     tags=["documents"],
@@ -41,6 +43,53 @@ def test_chunks(request: ChunkTestRequest):
         "chunk_count": len(chunks),
         "chunks": chunks,
     }
+
+class EmbeddingTestRequest(BaseModel):
+    texts: list[str]
+
+class SimilarityTestRequest(BaseModel):
+    query: str
+    candidates: list[str]
+
+@router.post("/test-embeddings")
+def test_embeddings(request: EmbeddingTestRequest):
+    embedding_service = get_embedding_service()
+    embeddings = embedding_service.embed_texts(request.texts)
+
+    return {
+        "model": settings.embedding_model_name,
+        "input_count": len(request.texts),
+        "embedding_dimension": len(embeddings[0]) if embeddings else 0,
+        "embeddings_preview": [vector[:5] for vector in embeddings],
+    }
+
+
+@router.post("/test-similarity")
+def test_similarity(request: SimilarityTestRequest):
+    embedding_service = get_embedding_service()
+
+    results = [
+        {
+            "text": candidate,
+            "similarity_score": embedding_service.calculate_similarity(
+                request.query,
+                candidate,
+            ),
+        }
+        for candidate in request.candidates
+    ]
+
+    ranked_results = sorted(
+        results,
+        key=lambda result: result["similarity_score"],
+        reverse=True,
+    )
+
+    return {
+        "query": request.query,
+        "results": ranked_results,
+    }
+
 
 @router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 def upload_document(
@@ -81,8 +130,11 @@ def upload_document(
 
         save_processed_text(document.id, extracted_text)
 
+        chunks = ChunkingService().split_text(extracted_text)
+
         document.status = "processed"
         document.char_count = len(extracted_text)
+        document.chunks_created = len(chunks)
 
         db.commit()
         db.refresh(document)
