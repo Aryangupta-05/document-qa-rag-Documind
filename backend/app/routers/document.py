@@ -55,13 +55,29 @@ def upload_document(
     db.commit()
     db.refresh(document)
 
-    extracted_text = DocumentProcessor.extract_text(file_path)
-    save_processed_text(document.id, extracted_text)
+    try:
+        extracted_text = DocumentProcessor.extract_text(file_path)
 
-    document.status = "processed"
-    document.char_count = len(extracted_text)
+        if not extracted_text.strip():
+            document.status = "failed"
+            db.commit()
+            db.refresh(document)
 
-    db.commit()
-    db.refresh(document)
+            return document
 
-    return document
+        save_processed_text(document.id, extracted_text)
+
+        document.status = "processed"
+        document.char_count = len(extracted_text)
+
+        db.commit()
+        db.refresh(document)
+
+        return document
+
+    except Exception:
+        document.status = "failed"
+        db.commit()
+        db.refresh(document)
+
+        return document
