@@ -54,6 +54,11 @@ class VectorStore:
             "index_size": self.index.ntotal,
             "dimension": self.dimension,
         }
+    
+    def clear(self) -> None:
+        self.index = faiss.IndexFlatIP(self.dimension)
+        self.chunks = []
+
 
 
 @lru_cache

@@ -27,3 +27,8 @@ def save_processed_text(document_id: str, text: str) -> Path:
     processed_path.write_text(text, encoding="utf-8")
 
     return processed_path
+
+def read_processed_text(document_id: str) -> str:
+    processed_path = settings.processed_dir / f"{document_id}.txt"
+
+    return processed_path.read_text(encoding="utf-8")

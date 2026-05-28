@@ -9,7 +9,7 @@ from app.config import settings
 from app.database import get_db
 from app.models.document import Document
 from app.schemas.document import DocumentListResponse, DocumentResponse
-from app.utils.file_storage import save_upload,save_processed_text
+from app.utils.file_storage import save_upload,save_processed_text,read_processed_text
 
 from pydantic import BaseModel
 
@@ -130,6 +130,49 @@ def search_documents(request: DocumentSearchRequest):
         "results_count": len(results),
         "vector_store": get_vector_store().stats(),
         "results": results,
+    }
+
+@router.post("/rebuild-index")
+def rebuild_document_index(db: Session = Depends(get_db)):
+    documents = (
+        db.query(Document)
+        .filter(Document.status == "processed")
+        .order_by(Document.created_at.asc())
+        .all()
+    )
+
+    vector_store = get_vector_store()
+    vector_store.clear()
+
+    total_chunks = 0
+    skipped_documents = []
+
+    for document in documents:
+        try:
+            processed_text = read_processed_text(document.id)
+            chunks = ChunkingService().split_text(processed_text)
+
+            chunk_records = [
+                {
+                    "document_id": document.id,
+                    "filename": document.filename,
+                    "chunk_index": index,
+                    "text": chunk,
+                }
+                for index, chunk in enumerate(chunks)
+            ]
+
+            vector_store.add_chunks(chunk_records)
+            total_chunks += len(chunk_records)
+
+        except FileNotFoundError:
+            skipped_documents.append(document.id)
+
+    return {
+        "documents_considered": len(documents),
+        "chunks_indexed": total_chunks,
+        "skipped_documents": skipped_documents,
+        "vector_store": vector_store.stats(),
     }
 
 
