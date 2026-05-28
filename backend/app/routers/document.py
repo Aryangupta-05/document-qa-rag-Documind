@@ -17,7 +17,7 @@ from app.services.chunking import ChunkingService
 
 from app.services.embedding import get_embedding_service
 
-from app.services.vector_store import VectorStore
+from app.services.vector_store import VectorStore,get_vector_store
 
 router = APIRouter(
     prefix="/documents",
@@ -26,10 +26,22 @@ router = APIRouter(
 class ChunkTestRequest(BaseModel):
     text: str
 
+class EmbeddingTestRequest(BaseModel):
+    texts: list[str]
+
+class SimilarityTestRequest(BaseModel):
+    query: str
+    candidates: list[str]
+
 class VectorSearchTestRequest(BaseModel):
     query: str
     texts: list[str]
     top_k: int = 3
+
+class DocumentSearchRequest(BaseModel):
+    query: str
+    top_k: int = 3
+
 
 @router.get("", response_model=DocumentListResponse)
 def list_documents(db: Session = Depends(get_db)):
@@ -51,12 +63,6 @@ def test_chunks(request: ChunkTestRequest):
         "chunks": chunks,
     }
 
-class EmbeddingTestRequest(BaseModel):
-    texts: list[str]
-
-class SimilarityTestRequest(BaseModel):
-    query: str
-    candidates: list[str]
 
 @router.post("/test-embeddings")
 def test_embeddings(request: EmbeddingTestRequest):
@@ -112,6 +118,21 @@ def test_vector_search(request: VectorSearchTestRequest):
     }
 
 
+@router.post("/search")
+def search_documents(request: DocumentSearchRequest):
+    results = get_vector_store().search(
+        query=request.query,
+        top_k=request.top_k,
+    )
+
+    return {
+        "query": request.query,
+        "results_count": len(results),
+        "vector_store": get_vector_store().stats(),
+        "results": results,
+    }
+
+
 @router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
 def upload_document(
     file: UploadFile = File(...),
@@ -152,6 +173,18 @@ def upload_document(
         save_processed_text(document.id, extracted_text)
 
         chunks = ChunkingService().split_text(extracted_text)
+
+        chunk_records = [
+            {
+                "document_id": document.id,
+                "filename": document.filename,
+                "chunk_index": index,
+                "text": chunk,
+            }
+            for index, chunk in enumerate(chunks)
+        ]
+
+        get_vector_store().add_chunks(chunk_records)
 
         document.status = "processed"
         document.char_count = len(extracted_text)
