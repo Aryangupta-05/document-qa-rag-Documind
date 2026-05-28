@@ -17,12 +17,19 @@ from app.services.chunking import ChunkingService
 
 from app.services.embedding import get_embedding_service
 
+from app.services.vector_store import VectorStore
+
 router = APIRouter(
     prefix="/documents",
     tags=["documents"],
 )
 class ChunkTestRequest(BaseModel):
     text: str
+
+class VectorSearchTestRequest(BaseModel):
+    query: str
+    texts: list[str]
+    top_k: int = 3
 
 @router.get("", response_model=DocumentListResponse)
 def list_documents(db: Session = Depends(get_db)):
@@ -88,6 +95,20 @@ def test_similarity(request: SimilarityTestRequest):
     return {
         "query": request.query,
         "results": ranked_results,
+    }
+
+
+@router.post("/test-vector-search")
+def test_vector_search(request: VectorSearchTestRequest):
+    vector_store = VectorStore()
+    vector_store.add_texts(request.texts)
+
+    results = vector_store.search(request.query, request.top_k)
+
+    return {
+        "query": request.query,
+        "indexed_text_count": len(request.texts),
+        "results": results,
     }
 
 
