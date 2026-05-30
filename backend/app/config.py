@@ -24,5 +24,8 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
+    groq_api_key: str | None = None
+    groq_model_name: str = "llama-3.1-8b-instant"
+
 
 settings = Settings()

@@ -19,4 +19,5 @@ def health_check():
         "app_name": settings.app_name,
         "environment": settings.environment,
         "database": "connected" if database_connected else "unavailable",
+        "llm": "configured" if settings.groq_api_key else "missing_api_key",
     }
