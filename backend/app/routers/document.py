@@ -52,6 +52,26 @@ def list_documents(db: Session = Depends(get_db)):
         "count": len(documents),
     }
 
+@router.get("/{document_id}", response_model=DocumentResponse)
+def get_document(
+    document_id: str,
+    db: Session = Depends(get_db),
+):
+    document = (
+        db.query(Document)
+        .filter(Document.id == document_id)
+        .first()
+    )
+
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+    return document
+    
+
 @router.post("/test-chunks")
 def test_chunks(request: ChunkTestRequest):
     chunks = ChunkingService().split_text(request.text)
