@@ -23,7 +23,8 @@ class Base(DeclarativeBase):
 
 def create_tables() -> None:
     from app.models.document import Document
-
+    from app.models.query import QueryHistory
+    
     Base.metadata.create_all(bind=engine)
 
 
