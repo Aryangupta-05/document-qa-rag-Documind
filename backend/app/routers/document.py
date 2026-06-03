@@ -70,7 +70,45 @@ def get_document(
         )
 
     return document
-    
+
+@router.get("/{document_id}/processed-text")
+def get_processed_text(
+    document_id: str,
+    db: Session = Depends(get_db),
+):
+    document = (
+        db.query(Document)
+        .filter(Document.id == document_id)
+        .first()
+    )
+
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+    if document.status != "processed":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Document has no processed text available.",
+        )
+
+    try:
+        text = read_processed_text(document.id)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Processed text file not found.",
+        )
+
+    return {
+        "document_id": document.id,
+        "filename": document.filename,
+        "char_count": len(text),
+        "text": text,
+    }
+
 
 @router.post("/test-chunks")
 def test_chunks(request: ChunkTestRequest):
