@@ -27,5 +27,9 @@ class Settings(BaseSettings):
     groq_api_key: str | None = None
     groq_model_name: str = "llama-3.1-8b-instant"
 
+    cors_origins: list[str] = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
 
 settings = Settings()
