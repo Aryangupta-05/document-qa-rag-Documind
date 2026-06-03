@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from app.config import settings
 from app.database import create_tables
-from app.routers import document, system
+from app.routers import document, system, query
 
 
 @asynccontextmanager
@@ -24,6 +24,7 @@ app = FastAPI(
 
 app.include_router(system.router, prefix=settings.api_prefix)
 app.include_router(document.router, prefix=settings.api_prefix)
+app.include_router(query.router, prefix=settings.api_prefix)
 
 
 @app.get("/")
