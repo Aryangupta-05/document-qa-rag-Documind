@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { documentApi, systemApi ,queryApi} from '../services/api'
+import { documentApi, systemApi ,queryApi,analyticsApi} from '../services/api'
 
 export const useAppStore = create((set) => ({
   health: null,
@@ -17,6 +17,9 @@ export const useAppStore = create((set) => ({
   queryHistory: [],
   isLoadingHistory: false,
   historyError: null,
+  analyticsStats: null,
+  isLoadingAnalytics: false,
+  analyticsError: null,
 
   loadSystemStatus: async () => {
     set({ isLoadingStatus: true, statusError: null })
@@ -107,10 +110,12 @@ askQuestion: async (question) => {
     }
 
     const historyData = await queryApi.getHistory()
+    const analyticsData = await analyticsApi.getStats()
 
     set((state) => ({
       chatMessages: [...state.chatMessages, assistantMessage],
       queryHistory: historyData.queries || state.queryHistory,
+      analyticsStats: analyticsData,
       isAskingQuestion: false,
     }))
   } catch (error) {
@@ -135,6 +140,24 @@ loadQueryHistory: async () => {
     set({
       historyError: error.message || 'Failed to load query history',
       isLoadingHistory: false,
+    })
+  }
+},
+
+loadAnalyticsStats: async () => {
+  set({ isLoadingAnalytics: true, analyticsError: null })
+
+  try {
+    const stats = await analyticsApi.getStats()
+
+    set({
+      analyticsStats: stats,
+      isLoadingAnalytics: false,
+    })
+  } catch (error) {
+    set({
+      analyticsError: error.message || 'Failed to load analytics',
+      isLoadingAnalytics: false,
     })
   }
 },

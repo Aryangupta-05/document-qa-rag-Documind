@@ -5,6 +5,7 @@ import DocumentList from './components/DocumentList'
 import DocumentUpload from './components/DocumentUpload'
 import ChatPanel from './components/ChatPanel'
 import QueryHistory from './components/QueryHistory'
+import AnalyticsStats from './components/AnalyticsStats'
 
 function App() {
   const {
@@ -15,6 +16,7 @@ function App() {
     loadSystemStatus,
     loadDocuments,
     loadQueryHistory,
+    loadAnalyticsStats,
   } = useAppStore()
 
   const navItems = [
@@ -27,7 +29,8 @@ function App() {
     loadSystemStatus()
     loadDocuments()
     loadQueryHistory()
-  }, [loadSystemStatus,loadDocuments,loadQueryHistory])
+    loadAnalyticsStats()
+  }, [loadSystemStatus,loadDocuments,loadQueryHistory,loadAnalyticsStats])
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -123,6 +126,7 @@ function App() {
         <DocumentUpload />
         <DocumentList />
         <ChatPanel />
+        <AnalyticsStats />
         <QueryHistory />
         </div>
 

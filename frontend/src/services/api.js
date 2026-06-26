@@ -51,3 +51,10 @@ export const queryApi = {
     return response.data
   },
 }
+
+export const analyticsApi = {
+  getStats: async () => {
+    const response = await api.get('/analytics/stats')
+    return response.data
+  },
+}
