@@ -23,20 +23,6 @@ router = APIRouter(
     prefix="/documents",
     tags=["documents"],
 )
-class ChunkTestRequest(BaseModel):
-    text: str
-
-class EmbeddingTestRequest(BaseModel):
-    texts: list[str]
-
-class SimilarityTestRequest(BaseModel):
-    query: str
-    candidates: list[str]
-
-class VectorSearchTestRequest(BaseModel):
-    query: str
-    texts: list[str]
-    top_k: int = 3
 
 class DocumentSearchRequest(BaseModel):
     query: str
@@ -107,72 +93,6 @@ def get_processed_text(
         "filename": document.filename,
         "char_count": len(text),
         "text": text,
-    }
-
-
-@router.post("/test-chunks")
-def test_chunks(request: ChunkTestRequest):
-    chunks = ChunkingService().split_text(request.text)
-
-    return {
-        "chunk_size": settings.chunk_size,
-        "chunk_overlap": settings.chunk_overlap,
-        "chunk_count": len(chunks),
-        "chunks": chunks,
-    }
-
-
-@router.post("/test-embeddings")
-def test_embeddings(request: EmbeddingTestRequest):
-    embedding_service = get_embedding_service()
-    embeddings = embedding_service.embed_texts(request.texts)
-
-    return {
-        "model": settings.embedding_model_name,
-        "input_count": len(request.texts),
-        "embedding_dimension": len(embeddings[0]) if embeddings else 0,
-        "embeddings_preview": [vector[:5] for vector in embeddings],
-    }
-
-
-@router.post("/test-similarity")
-def test_similarity(request: SimilarityTestRequest):
-    embedding_service = get_embedding_service()
-
-    results = [
-        {
-            "text": candidate,
-            "similarity_score": embedding_service.calculate_similarity(
-                request.query,
-                candidate,
-            ),
-        }
-        for candidate in request.candidates
-    ]
-
-    ranked_results = sorted(
-        results,
-        key=lambda result: result["similarity_score"],
-        reverse=True,
-    )
-
-    return {
-        "query": request.query,
-        "results": ranked_results,
-    }
-
-
-@router.post("/test-vector-search")
-def test_vector_search(request: VectorSearchTestRequest):
-    vector_store = VectorStore()
-    vector_store.add_texts(request.texts)
-
-    results = vector_store.search(request.query, request.top_k)
-
-    return {
-        "query": request.query,
-        "indexed_text_count": len(request.texts),
-        "results": results,
     }
 
 
