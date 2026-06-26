@@ -36,3 +36,14 @@ export const documentApi = {
     return response.data
   },
 }
+
+export const queryApi = {
+  askQuestion: async ({ question, topK = 3 }) => {
+    const response = await api.post('/query/ask', {
+      question,
+      top_k: topK,
+    })
+
+    return response.data
+  },
+}

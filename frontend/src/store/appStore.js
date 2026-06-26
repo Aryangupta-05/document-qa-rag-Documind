@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { documentApi, systemApi } from '../services/api'
+import { documentApi, systemApi ,queryApi} from '../services/api'
 
 export const useAppStore = create((set) => ({
   health: null,
@@ -11,6 +11,9 @@ export const useAppStore = create((set) => ({
   documentsError: null,
   isUploadingDocument: false,
   uploadError: null,
+  chatMessages: [],
+  isAskingQuestion: false,
+  questionError: null,
 
   loadSystemStatus: async () => {
     set({ isLoadingStatus: true, statusError: null })
@@ -67,6 +70,47 @@ uploadDocument: async (file) => {
     set({
       uploadError: error.response?.data?.detail || error.message || 'Failed to upload document',
       isUploadingDocument: false,
+    })
+  }
+},
+
+askQuestion: async (question) => {
+  const userMessage = {
+    id: crypto.randomUUID(),
+    role: 'user',
+    content: question,
+  }
+
+  set((state) => ({
+    chatMessages: [...state.chatMessages, userMessage],
+    isAskingQuestion: true,
+    questionError: null,
+  }))
+
+  try {
+    const result = await queryApi.askQuestion({
+      question,
+      topK: 3,
+    })
+
+    const assistantMessage = {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: result.answer,
+      sources: result.sources || [],
+      success: result.success,
+      responseTime: result.response_time,
+      model: result.model,
+    }
+
+    set((state) => ({
+      chatMessages: [...state.chatMessages, assistantMessage],
+      isAskingQuestion: false,
+    }))
+  } catch (error) {
+    set({
+      questionError: error.response?.data?.detail || error.message || 'Failed to ask question',
+      isAskingQuestion: false,
     })
   }
 },

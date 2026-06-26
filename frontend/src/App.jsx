@@ -3,6 +3,7 @@ import { BarChart3, Brain, Database, FileText, MessageSquare, RefreshCw } from '
 import { useAppStore } from './store/appStore'
 import DocumentList from './components/DocumentList'
 import DocumentUpload from './components/DocumentUpload'
+import ChatPanel from './components/ChatPanel'
 
 function App() {
   const {
@@ -118,6 +119,7 @@ function App() {
         <div className="space-y-6">
         <DocumentUpload />
         <DocumentList />
+        <ChatPanel />
         </div>
 
       </main>
