@@ -4,6 +4,7 @@ import { useAppStore } from './store/appStore'
 import DocumentList from './components/DocumentList'
 import DocumentUpload from './components/DocumentUpload'
 import ChatPanel from './components/ChatPanel'
+import QueryHistory from './components/QueryHistory'
 
 function App() {
   const {
@@ -13,6 +14,7 @@ function App() {
     statusError,
     loadSystemStatus,
     loadDocuments,
+    loadQueryHistory,
   } = useAppStore()
 
   const navItems = [
@@ -24,7 +26,8 @@ function App() {
   useEffect(() => {
     loadSystemStatus()
     loadDocuments()
-  }, [loadSystemStatus,loadDocuments])
+    loadQueryHistory()
+  }, [loadSystemStatus,loadDocuments,loadQueryHistory])
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -120,6 +123,7 @@ function App() {
         <DocumentUpload />
         <DocumentList />
         <ChatPanel />
+        <QueryHistory />
         </div>
 
       </main>

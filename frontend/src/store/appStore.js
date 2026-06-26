@@ -14,6 +14,9 @@ export const useAppStore = create((set) => ({
   chatMessages: [],
   isAskingQuestion: false,
   questionError: null,
+  queryHistory: [],
+  isLoadingHistory: false,
+  historyError: null,
 
   loadSystemStatus: async () => {
     set({ isLoadingStatus: true, statusError: null })
@@ -103,14 +106,35 @@ askQuestion: async (question) => {
       model: result.model,
     }
 
+    const historyData = await queryApi.getHistory()
+
     set((state) => ({
       chatMessages: [...state.chatMessages, assistantMessage],
+      queryHistory: historyData.queries || state.queryHistory,
       isAskingQuestion: false,
     }))
   } catch (error) {
     set({
       questionError: error.response?.data?.detail || error.message || 'Failed to ask question',
       isAskingQuestion: false,
+    })
+  }
+},
+
+loadQueryHistory: async () => {
+  set({ isLoadingHistory: true, historyError: null })
+
+  try {
+    const data = await queryApi.getHistory()
+
+    set({
+      queryHistory: data.queries || [],
+      isLoadingHistory: false,
+    })
+  } catch (error) {
+    set({
+      historyError: error.message || 'Failed to load query history',
+      isLoadingHistory: false,
     })
   }
 },

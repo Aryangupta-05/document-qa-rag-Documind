@@ -46,4 +46,8 @@ export const queryApi = {
 
     return response.data
   },
+  getHistory: async () => {
+    const response = await api.get('/query/history')
+    return response.data
+  },
 }
