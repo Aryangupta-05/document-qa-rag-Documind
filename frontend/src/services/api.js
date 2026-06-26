@@ -35,6 +35,11 @@ export const documentApi = {
 
     return response.data
   },
+  
+  deleteDocument: async (documentId) => {
+  const response = await api.delete(`/documents/${documentId}`)
+  return response.data
+},
 }
 
 export const queryApi = {
@@ -58,3 +63,4 @@ export const analyticsApi = {
     return response.data
   },
 }
+

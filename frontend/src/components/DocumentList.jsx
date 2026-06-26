@@ -1,8 +1,9 @@
 import { FileText } from 'lucide-react'
 import { useAppStore } from '../store/appStore'
+import { Trash2 } from 'lucide-react'
 
 function DocumentList() {
-  const { documents, isLoadingDocuments, documentsError } = useAppStore()
+  const { documents, isLoadingDocuments, documentsError, deleteDocument } = useAppStore()
 
   return (
     <section className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -33,6 +34,7 @@ function DocumentList() {
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Chars</th>
                 <th className="px-4 py-3 font-medium">Chunks</th>
+                <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
             </thead>
 
@@ -53,6 +55,15 @@ function DocumentList() {
                   </td>
                   <td className="px-4 py-3 text-slate-600">
                     {document.chunks_created}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => deleteDocument(document.id)}
+                      className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2 py-1 text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 size={14} />
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}

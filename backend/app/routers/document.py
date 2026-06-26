@@ -9,7 +9,14 @@ from app.config import settings
 from app.database import get_db
 from app.models.document import Document
 from app.schemas.document import DocumentListResponse, DocumentResponse
-from app.utils.file_storage import save_upload,save_processed_text,read_processed_text
+
+from app.utils.file_storage import (
+    delete_file_if_exists,
+    get_processed_text_path,
+    read_processed_text,
+    save_processed_text,
+    save_upload,
+)
 
 from pydantic import BaseModel
 
@@ -95,6 +102,34 @@ def get_processed_text(
         "text": text,
     }
 
+@router.delete("/{document_id}")
+def delete_document(
+    document_id: str,
+    db: Session = Depends(get_db),
+):
+    document = (
+        db.query(Document)
+        .filter(Document.id == document_id)
+        .first()
+    )
+
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found.",
+        )
+
+    delete_file_if_exists(Path(document.file_path))
+    delete_file_if_exists(get_processed_text_path(document.id))
+
+    db.delete(document)
+    db.commit()
+
+    return {
+        "message": "Document deleted successfully.",
+        "document_id": document_id,
+        "rebuild_index_required": True,
+    }
 
 @router.post("/search")
 def search_documents(request: DocumentSearchRequest):

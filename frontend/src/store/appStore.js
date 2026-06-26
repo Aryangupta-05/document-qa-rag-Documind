@@ -162,4 +162,19 @@ loadAnalyticsStats: async () => {
   }
 },
 
+deleteDocument: async (documentId) => {
+  try {
+    await documentApi.deleteDocument(documentId)
+    const data = await documentApi.getDocuments()
+
+    set({
+      documents: data.documents || [],
+    })
+  } catch (error) {
+    set({
+      documentsError: error.response?.data?.detail || error.message || 'Failed to delete document',
+    })
+  }
+},
+
 }))

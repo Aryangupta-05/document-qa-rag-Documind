@@ -5,6 +5,8 @@ from fastapi import UploadFile
 
 from app.config import settings
 
+from contextlib import suppress
+
 
 def save_upload(file: UploadFile) -> tuple[str, Path]:
     file_id = str(uuid4())
@@ -29,6 +31,13 @@ def save_processed_text(document_id: str, text: str) -> Path:
     return processed_path
 
 def read_processed_text(document_id: str) -> str:
-    processed_path = settings.processed_dir / f"{document_id}.txt"
+    processed_path = get_processed_text_path(document_id)
 
     return processed_path.read_text(encoding="utf-8")
+
+def delete_file_if_exists(file_path: Path) -> None:
+    with suppress(FileNotFoundError):
+        file_path.unlink()
+
+def get_processed_text_path(document_id: str) -> Path:
+    return settings.processed_dir / f"{document_id}.txt"
