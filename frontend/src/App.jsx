@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { BarChart3, Brain, Database, FileText, MessageSquare, RefreshCw } from 'lucide-react'
 import { useAppStore } from './store/appStore'
+import DocumentList from './components/DocumentList'
+import DocumentUpload from './components/DocumentUpload'
 
 function App() {
   const {
@@ -9,6 +11,7 @@ function App() {
     isLoadingStatus,
     statusError,
     loadSystemStatus,
+    loadDocuments,
   } = useAppStore()
 
   const navItems = [
@@ -19,7 +22,8 @@ function App() {
 
   useEffect(() => {
     loadSystemStatus()
-  }, [loadSystemStatus])
+    loadDocuments()
+  }, [loadSystemStatus,loadDocuments])
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -110,6 +114,12 @@ function App() {
             </p>
           </div>
         </section>
+        
+        <div className="space-y-6">
+        <DocumentUpload />
+        <DocumentList />
+        </div>
+
       </main>
     </div>
   )
