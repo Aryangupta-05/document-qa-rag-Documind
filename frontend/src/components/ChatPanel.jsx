@@ -4,7 +4,7 @@ import { useAppStore } from '../store/appStore'
 
 function ChatPanel() {
   const [question, setQuestion] = useState('')
-  const { chatMessages, askQuestion, isAskingQuestion, questionError } = useAppStore()
+  const { chatMessages, askQuestion, isAskingQuestion, questionError ,selectedDocumentIds} = useAppStore()
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -22,10 +22,19 @@ function ChatPanel() {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-4">
+        
         <h3 className="text-base font-semibold text-slate-950">Ask your documents</h3>
+
         <p className="mt-1 text-sm text-slate-500">
           Ask a question and DocuMind AI will answer using indexed document chunks.
         </p>
+        
+        <p className="mt-1 text-xs text-slate-500">
+          {selectedDocumentIds.length > 0
+            ? `Searching ${selectedDocumentIds.length} selected document(s).`
+            : 'Searching all indexed documents.'}
+        </p>
+
       </div>
 
       <div className="mb-4 max-h-96 space-y-3 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-4">

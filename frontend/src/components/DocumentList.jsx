@@ -3,7 +3,8 @@ import { useAppStore } from '../store/appStore'
 import { Trash2 } from 'lucide-react'
 
 function DocumentList() {
-  const { documents, isLoadingDocuments, documentsError, deleteDocument } = useAppStore()
+  const { documents, isLoadingDocuments, documentsError, deleteDocument ,selectedDocumentIds,
+    toggleSelectedDocument,} = useAppStore()
 
   return (
     <section className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -29,6 +30,7 @@ function DocumentList() {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-500">
               <tr>
+                <th className="px-4 py-3 font-medium">Use</th>
                 <th className="px-4 py-3 font-medium">Filename</th>
                 <th className="px-4 py-3 font-medium">Type</th>
                 <th className="px-4 py-3 font-medium">Status</th>
@@ -41,6 +43,15 @@ function DocumentList() {
             <tbody className="divide-y divide-slate-200">
               {documents.map((document) => (
                 <tr key={document.id}>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedDocumentIds.includes(document.id)}
+                      onChange={() => toggleSelectedDocument(document.id)}
+                      disabled={document.status !== 'processed' || document.chunks_created === 0}
+                      className="h-4 w-4 rounded border-slate-300"
+                    />
+                  </td>
                   <td className="px-4 py-3 font-medium text-slate-900">
                     {document.filename}
                   </td>

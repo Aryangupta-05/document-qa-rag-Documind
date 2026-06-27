@@ -20,6 +20,7 @@ export const useAppStore = create((set) => ({
   analyticsStats: null,
   isLoadingAnalytics: false,
   analyticsError: null,
+  selectedDocumentIds: [],
 
   loadSystemStatus: async () => {
     set({ isLoadingStatus: true, statusError: null })
@@ -81,6 +82,9 @@ uploadDocument: async (file) => {
 },
 
 askQuestion: async (question) => {
+
+  const selectedDocumentIds = useAppStore.getState().selectedDocumentIds
+
   const userMessage = {
     id: crypto.randomUUID(),
     role: 'user',
@@ -97,6 +101,7 @@ askQuestion: async (question) => {
     const result = await queryApi.askQuestion({
       question,
       topK: 3,
+      documentIds: selectedDocumentIds,
     })
 
     const assistantMessage = {
@@ -175,6 +180,18 @@ deleteDocument: async (documentId) => {
       documentsError: error.response?.data?.detail || error.message || 'Failed to delete document',
     })
   }
+},
+
+toggleSelectedDocument: (documentId) => {
+  set((state) => {
+    const isSelected = state.selectedDocumentIds.includes(documentId)
+
+    return {
+      selectedDocumentIds: isSelected
+        ? state.selectedDocumentIds.filter((id) => id !== documentId)
+        : [...state.selectedDocumentIds, documentId],
+    }
+  })
 },
 
 }))

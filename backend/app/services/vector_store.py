@@ -28,23 +28,38 @@ class VectorStore:
 
         return len(chunks)
 
-    def search(self, query: str, top_k: int = 3) -> list[dict[str, Any]]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 3,
+        document_ids: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
         if not self.chunks:
             return []
+
+        allowed_document_ids = set(document_ids or [])
 
         embedding_service = get_embedding_service()
         query_embedding = embedding_service.embed_texts([query])
         query_vector = np.array(query_embedding, dtype="float32")
 
-        result_count = min(top_k, len(self.chunks))
-        scores, indices = self.index.search(query_vector, result_count)
+        search_count = len(self.chunks)
+        scores, indices = self.index.search(query_vector, search_count)
 
         results = []
 
         for score, index in zip(scores[0], indices[0]):
-            chunk = self.chunks[index].copy()
-            chunk["similarity_score"] = float(score)
-            results.append(chunk)
+            chunk = self.chunks[index]
+
+            if allowed_document_ids and chunk.get("document_id") not in allowed_document_ids:
+                continue
+
+            result = chunk.copy()
+            result["similarity_score"] = float(score)
+            results.append(result)
+
+            if len(results) >= top_k:
+                break
 
         return results
 

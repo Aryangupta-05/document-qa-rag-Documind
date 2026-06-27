@@ -35,7 +35,7 @@ export const documentApi = {
 
     return response.data
   },
-  
+
   deleteDocument: async (documentId) => {
   const response = await api.delete(`/documents/${documentId}`)
   return response.data
@@ -43,10 +43,11 @@ export const documentApi = {
 }
 
 export const queryApi = {
-  askQuestion: async ({ question, topK = 3 }) => {
+  askQuestion: async ({ question, topK = 3,documentIds = [] }) => {
     const response = await api.post('/query/ask', {
       question,
       top_k: topK,
+      document_ids: documentIds,
     })
 
     return response.data

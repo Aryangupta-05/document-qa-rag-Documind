@@ -20,7 +20,7 @@ router = APIRouter(
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=3)
     top_k: int = Field(default=3, ge=1, le=10)
-
+    document_ids: list[str] | None = None
 
 def save_query_history(
     db: Session,
@@ -55,6 +55,7 @@ def ask_question(
     retrieved_chunks = vector_store.search(
         query=request.question,
         top_k=request.top_k,
+        document_ids=request.document_ids,
     )
 
     if not retrieved_chunks:
