@@ -4,7 +4,9 @@ import { useAppStore } from '../store/appStore'
 
 function ChatPanel() {
   const [question, setQuestion] = useState('')
-  const { chatMessages, askQuestion, isAskingQuestion, questionError ,selectedDocumentIds} = useAppStore()
+  const { chatMessages, askQuestion, isAskingQuestion, questionError ,selectedDocumentIds
+    ,clearChat
+  } = useAppStore()
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -21,20 +23,27 @@ function ChatPanel() {
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-4">
-        
-        <h3 className="text-base font-semibold text-slate-950">Ask your documents</h3>
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-base font-semibold text-slate-950">Ask your documents</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            Ask a question and DocuMind AI will answer using indexed document chunks.
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            {selectedDocumentIds.length > 0
+              ? `Searching ${selectedDocumentIds.length} selected document(s).`
+              : 'Searching all indexed documents.'}
+          </p>
+        </div>
 
-        <p className="mt-1 text-sm text-slate-500">
-          Ask a question and DocuMind AI will answer using indexed document chunks.
-        </p>
-        
-        <p className="mt-1 text-xs text-slate-500">
-          {selectedDocumentIds.length > 0
-            ? `Searching ${selectedDocumentIds.length} selected document(s).`
-            : 'Searching all indexed documents.'}
-        </p>
-
+        <button
+          type="button"
+          onClick={clearChat}
+          disabled={chatMessages.length === 0}
+          className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Clear chat
+        </button>
       </div>
 
       <div className="mb-4 max-h-96 space-y-3 overflow-y-auto rounded-md border border-slate-200 bg-slate-50 p-4">

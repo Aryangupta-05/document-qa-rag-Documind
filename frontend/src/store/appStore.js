@@ -194,4 +194,12 @@ toggleSelectedDocument: (documentId) => {
   })
 },
 
+clearChat: () => {
+  set({
+    chatMessages: [],
+    questionError: null,
+  })
+},
+
+
 }))
