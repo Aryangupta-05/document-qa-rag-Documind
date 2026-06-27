@@ -3,13 +3,21 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.config import settings
-from app.database import create_tables
 from app.routers import document, system, query, analytics
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.database import SessionLocal, create_tables
+from app.services.indexing import rebuild_vector_index
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_tables()
+
+    db = SessionLocal()
+    try:
+        rebuild_vector_index(db)
+    finally:
+        db.close()
 
     yield
 
