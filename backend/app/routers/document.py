@@ -26,6 +26,8 @@ from app.services.embedding import get_embedding_service
 
 from app.services.vector_store import VectorStore,get_vector_store
 
+from app.services.indexing import rebuild_vector_index
+
 router = APIRouter(
     prefix="/documents",
     tags=["documents"],
@@ -125,11 +127,13 @@ def delete_document(
     db.delete(document)
     db.commit()
 
+    rebuild_result = rebuild_vector_index(db)
+
     return {
-        "message": "Document deleted successfully.",
-        "document_id": document_id,
-        "rebuild_index_required": True,
-    }
+    "message": "Document deleted successfully.",
+    "document_id": document_id,
+    "rebuild_index": rebuild_result,
+}
 
 @router.post("/search")
 def search_documents(request: DocumentSearchRequest):
@@ -147,46 +151,7 @@ def search_documents(request: DocumentSearchRequest):
 
 @router.post("/rebuild-index")
 def rebuild_document_index(db: Session = Depends(get_db)):
-    documents = (
-        db.query(Document)
-        .filter(Document.status == "processed")
-        .order_by(Document.created_at.asc())
-        .all()
-    )
-
-    vector_store = get_vector_store()
-    vector_store.clear()
-
-    total_chunks = 0
-    skipped_documents = []
-
-    for document in documents:
-        try:
-            processed_text = read_processed_text(document.id)
-            chunks = ChunkingService().split_text(processed_text)
-
-            chunk_records = [
-                {
-                    "document_id": document.id,
-                    "filename": document.filename,
-                    "chunk_index": index,
-                    "text": chunk,
-                }
-                for index, chunk in enumerate(chunks)
-            ]
-
-            vector_store.add_chunks(chunk_records)
-            total_chunks += len(chunk_records)
-
-        except FileNotFoundError:
-            skipped_documents.append(document.id)
-
-    return {
-        "documents_considered": len(documents),
-        "chunks_indexed": total_chunks,
-        "skipped_documents": skipped_documents,
-        "vector_store": vector_store.stats(),
-    }
+    return rebuild_vector_index(db)
 
 
 @router.post("/upload", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
