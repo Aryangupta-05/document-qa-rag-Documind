@@ -24,6 +24,7 @@ export const useAppStore = create((set) => ({
   isRebuildingIndex: false,
   rebuildIndexError: null,
   lastRebuildResult: null,
+  activeTab: 'dashboard',
 
   loadSystemStatus: async () => {
     set({ isLoadingStatus: true, statusError: null })
@@ -225,6 +226,10 @@ rebuildIndex: async () => {
       isRebuildingIndex: false,
     })
   }
+},
+
+setActiveTab: (tab) => {
+  set({ activeTab: tab })
 },
 
 }))
