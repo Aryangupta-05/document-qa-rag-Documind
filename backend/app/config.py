@@ -13,8 +13,7 @@ class Settings(BaseSettings):
     upload_dir: Path = Path("uploads") # original user file
     processed_dir: Path = Path("processed") #extracted plain text files
     allowed_extensions: set[str] = {".pdf", ".docx", ".txt", ".html", ".md"}
-    max_file_size_mb: int = 20
-    chunk_size: int = 500
+    max_file_size_mb: int =20
     chunk_overlap: int = 100
 
     embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
