@@ -1,10 +1,11 @@
 import { FileText } from 'lucide-react'
 import { useAppStore } from '../store/appStore'
 import { Trash2 } from 'lucide-react'
+import { Eye } from 'lucide-react'
 
 function DocumentList() {
   const { documents, isLoadingDocuments, documentsError, deleteDocument ,selectedDocumentIds,
-    toggleSelectedDocument,} = useAppStore()
+    toggleSelectedDocument,loadProcessedText } = useAppStore()
 
   return (
     <section className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -68,7 +69,17 @@ function DocumentList() {
                     {document.chunks_created}
                   </td>
                   <td className="px-4 py-3">
-                    <button
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => loadProcessedText(document.id)}
+                        disabled={document.status !== 'processed'}
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Eye size={14} />
+                        Preview
+                      </button>
+
+                      <button
                         onClick={() => {
                           const confirmed = window.confirm(
                             `Delete "${document.filename}"? This will remove the document and its processed text.`
@@ -80,9 +91,10 @@ function DocumentList() {
                         }}
                         className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2 py-1 text-red-600 hover:bg-red-50"
                       >
-                      <Trash2 size={14} />
-                      Delete
-                    </button>
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -45,7 +45,10 @@ export const documentApi = {
   const response = await api.post('/documents/rebuild-index')
   return response.data
 },
-
+  getProcessedText: async (documentId) => {
+  const response = await api.get(`/documents/${documentId}/processed-text`)
+  return response.data
+},
 }
 
 export const queryApi = {

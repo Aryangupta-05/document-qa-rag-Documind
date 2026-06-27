@@ -9,7 +9,7 @@ import ChatPanel from './components/ChatPanel'
 import QueryHistory from './components/QueryHistory'
 import AnalyticsStats from './components/AnalyticsStats'
 import RebuildIndexPanel from './components/RebuildIndexPanel'
-
+import ProcessedTextPreview from './components/ProcessedTextPreview'
 function App() {
   const {
     health,
@@ -101,6 +101,7 @@ function App() {
         <div className="space-y-6">
           <DocumentUpload />
           <DocumentList />
+          <ProcessedTextPreview />
         </div>
       )
     }
@@ -171,7 +172,7 @@ function App() {
             <p className="mt-1 text-sm text-slate-500">
               Manage documents, ask questions, and inspect RAG system activity.
             </p>
-            
+
           </div>
 
           <button

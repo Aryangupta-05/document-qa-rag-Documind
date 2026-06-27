@@ -26,6 +26,10 @@ export const useAppStore = create((set) => ({
   lastRebuildResult: null,
   activeTab: 'dashboard',
 
+  processedTextPreview: null,
+  isLoadingProcessedText: false,
+  processedTextError: null,
+
   loadSystemStatus: async () => {
     set({ isLoadingStatus: true, statusError: null })
 
@@ -230,6 +234,34 @@ rebuildIndex: async () => {
 
 setActiveTab: (tab) => {
   set({ activeTab: tab })
+},
+
+loadProcessedText: async (documentId) => {
+  set({
+    isLoadingProcessedText: true,
+    processedTextError: null,
+  })
+
+  try {
+    const data = await documentApi.getProcessedText(documentId)
+
+    set({
+      processedTextPreview: data,
+      isLoadingProcessedText: false,
+    })
+  } catch (error) {
+    set({
+      processedTextError: error.response?.data?.detail || error.message || 'Failed to load processed text',
+      isLoadingProcessedText: false,
+    })
+  }
+},
+
+closeProcessedTextPreview: () => {
+  set({
+    processedTextPreview: null,
+    processedTextError: null,
+  })
 },
 
 }))
