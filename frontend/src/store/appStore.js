@@ -21,6 +21,9 @@ export const useAppStore = create((set) => ({
   isLoadingAnalytics: false,
   analyticsError: null,
   selectedDocumentIds: [],
+  isRebuildingIndex: false,
+  rebuildIndexError: null,
+  lastRebuildResult: null,
 
   loadSystemStatus: async () => {
     set({ isLoadingStatus: true, statusError: null })
@@ -201,5 +204,27 @@ clearChat: () => {
   })
 },
 
+rebuildIndex: async () => {
+  set({
+    isRebuildingIndex: true,
+    rebuildIndexError: null,
+  })
+
+  try {
+    const result = await documentApi.rebuildIndex()
+    const ragStatus = await systemApi.getRagStatus()
+
+    set({
+      lastRebuildResult: result,
+      ragStatus,
+      isRebuildingIndex: false,
+    })
+  } catch (error) {
+    set({
+      rebuildIndexError: error.response?.data?.detail || error.message || 'Failed to rebuild index',
+      isRebuildingIndex: false,
+    })
+  }
+},
 
 }))

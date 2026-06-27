@@ -40,6 +40,12 @@ export const documentApi = {
   const response = await api.delete(`/documents/${documentId}`)
   return response.data
 },
+
+  rebuildIndex: async () => {
+  const response = await api.post('/documents/rebuild-index')
+  return response.data
+},
+
 }
 
 export const queryApi = {

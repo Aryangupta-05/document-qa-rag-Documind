@@ -6,6 +6,7 @@ import DocumentUpload from './components/DocumentUpload'
 import ChatPanel from './components/ChatPanel'
 import QueryHistory from './components/QueryHistory'
 import AnalyticsStats from './components/AnalyticsStats'
+import RebuildIndexPanel from './components/RebuildIndexPanel'
 
 function App() {
   const {
@@ -125,6 +126,7 @@ function App() {
         <div className="space-y-6">
         <DocumentUpload />
         <DocumentList />
+        <RebuildIndexPanel />
         <ChatPanel />
         <AnalyticsStats />
         <QueryHistory />
