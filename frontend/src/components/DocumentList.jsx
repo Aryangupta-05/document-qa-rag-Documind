@@ -69,9 +69,17 @@ function DocumentList() {
                   </td>
                   <td className="px-4 py-3">
                     <button
-                      onClick={() => deleteDocument(document.id)}
-                      className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2 py-1 text-red-600 hover:bg-red-50"
-                    >
+                        onClick={() => {
+                          const confirmed = window.confirm(
+                            `Delete "${document.filename}"? This will remove the document and its processed text.`
+                          )
+
+                          if (confirmed) {
+                            deleteDocument(document.id)
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md border border-red-200 px-2 py-1 text-red-600 hover:bg-red-50"
+                      >
                       <Trash2 size={14} />
                       Delete
                     </button>
