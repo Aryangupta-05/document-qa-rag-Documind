@@ -30,6 +30,8 @@ export const useAppStore = create((set) => ({
   isLoadingProcessedText: false,
   processedTextError: null,
 
+  notification: null,
+
   loadSystemStatus: async () => {
     set({ isLoadingStatus: true, statusError: null })
 
@@ -80,11 +82,19 @@ uploadDocument: async (file) => {
     set({
       documents: data.documents || [],
       isUploadingDocument: false,
+      notification: {
+      type: 'success',
+      message: 'Document uploaded and processed.',
+      },
     })
   } catch (error) {
     set({
       uploadError: error.response?.data?.detail || error.message || 'Failed to upload document',
       isUploadingDocument: false,
+      notification: {
+      type: 'error',
+      message: error.response?.data?.detail || error.message || 'Failed to upload document',
+      },
     })
   }
 },
@@ -130,11 +140,20 @@ askQuestion: async (question) => {
       queryHistory: historyData.queries || state.queryHistory,
       analyticsStats: analyticsData,
       isAskingQuestion: false,
+
+      notification: {
+      type: 'success',
+      message: 'Answer generated.',
+        },
     }))
   } catch (error) {
     set({
       questionError: error.response?.data?.detail || error.message || 'Failed to ask question',
       isAskingQuestion: false,
+      notification: {
+      type: 'error',
+      message: error.response?.data?.detail || error.message || 'Failed to ask question',
+      },
     })
   }
 },
@@ -182,10 +201,18 @@ deleteDocument: async (documentId) => {
 
     set({
       documents: data.documents || [],
+      notification: {
+      type: 'success',
+      message: 'Document deleted.',
+      },
     })
   } catch (error) {
     set({
       documentsError: error.response?.data?.detail || error.message || 'Failed to delete document',
+      notification: {
+      type: 'error',
+      message: error.response?.data?.detail || error.message || 'Failed to delete document',
+      },
     })
   }
 },
@@ -223,11 +250,19 @@ rebuildIndex: async () => {
       lastRebuildResult: result,
       ragStatus,
       isRebuildingIndex: false,
+      notification: {
+      type: 'success',
+      message: 'Vector index rebuilt.',
+      },
     })
   } catch (error) {
     set({
       rebuildIndexError: error.response?.data?.detail || error.message || 'Failed to rebuild index',
       isRebuildingIndex: false,
+      notification: {
+      type: 'error',
+      message: error.response?.data?.detail || error.message || 'Failed to rebuild index',
+      },
     })
   }
 },
@@ -262,6 +297,14 @@ closeProcessedTextPreview: () => {
     processedTextPreview: null,
     processedTextError: null,
   })
+},
+
+setNotification: (notification) => {
+  set({ notification })
+},
+
+clearNotification: () => {
+  set({ notification: null })
 },
 
 }))

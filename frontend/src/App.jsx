@@ -10,6 +10,8 @@ import QueryHistory from './components/QueryHistory'
 import AnalyticsStats from './components/AnalyticsStats'
 import RebuildIndexPanel from './components/RebuildIndexPanel'
 import ProcessedTextPreview from './components/ProcessedTextPreview'
+import NotificationBanner from './components/NotificationBanner'
+
 function App() {
   const {
     health,
@@ -193,7 +195,7 @@ function App() {
             {statusError}
           </div>
         )}
-
+        <NotificationBanner />
         {renderActiveTab()}
       </main>
     </div>
