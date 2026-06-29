@@ -1,6 +1,8 @@
+import json
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -21,6 +23,7 @@ class AskRequest(BaseModel):
     question: str = Field(..., min_length=3)
     top_k: int = Field(default=3, ge=1, le=10)
     document_ids: list[str] | None = None
+
 
 def save_query_history(
     db: Session,
@@ -124,6 +127,115 @@ def ask_question(
         "sources": retrieved_chunks,
         "response_time": response_time,
     }
+
+
+@router.post("/ask-stream")
+def ask_question_stream(
+    request: AskRequest,
+    db: Session = Depends(get_db),
+):
+    start_time = time.perf_counter()
+    vector_store = get_vector_store()
+
+    retrieved_chunks = vector_store.search(
+        query=request.question,
+        top_k=request.top_k,
+        document_ids=request.document_ids,
+    )
+
+    if not retrieved_chunks:
+        def no_results_stream():
+            payload = {
+                "type": "error",
+                "message": "No indexed document chunks found. Upload and index documents first.",
+            }
+            yield f"data: {json.dumps(payload)}\n\n"
+
+        return StreamingResponse(
+            no_results_stream(),
+            media_type="text/event-stream",
+        )
+
+    context = "\n\n".join(
+        [
+            f"Source: {chunk.get('filename')}\n{chunk.get('text')}"
+            for chunk in retrieved_chunks
+        ]
+    )
+
+    llm_service = get_llm_service()
+
+    def event_stream():
+        full_answer = ""
+
+        try:
+            sources_payload = {
+                "type": "sources",
+                "sources": [
+                    {
+                        "document_id": chunk.get("document_id"),
+                        "filename": chunk.get("filename"),
+                        "chunk_index": chunk.get("chunk_index"),
+                        "similarity_score": chunk.get("similarity_score"),
+                    }
+                    for chunk in retrieved_chunks
+                ],
+            }
+            yield f"data: {json.dumps(sources_payload)}\n\n"
+
+            for token in llm_service.stream_answer(
+                question=request.question,
+                context=context,
+            ):
+                full_answer += token
+
+                payload = {
+                    "type": "token",
+                    "content": token,
+                }
+                yield f"data: {json.dumps(payload)}\n\n"
+
+            response_time = time.perf_counter() - start_time
+
+            save_query_history(
+                db=db,
+                question=request.question,
+                answer=full_answer,
+                model=None,
+                sources_count=len(retrieved_chunks),
+                response_time=response_time,
+                success=True,
+            )
+
+            done_payload = {
+                "type": "done",
+                "response_time": response_time,
+            }
+            yield f"data: {json.dumps(done_payload)}\n\n"
+
+        except Exception as error:
+            response_time = time.perf_counter() - start_time
+
+            save_query_history(
+                db=db,
+                question=request.question,
+                answer=str(error),
+                model=None,
+                sources_count=len(retrieved_chunks),
+                response_time=response_time,
+                success=False,
+            )
+
+            error_payload = {
+                "type": "error",
+                "message": "Streaming answer failed.",
+            }
+            yield f"data: {json.dumps(error_payload)}\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+    )
 
 
 @router.get("/history", response_model=QueryHistoryListResponse)
