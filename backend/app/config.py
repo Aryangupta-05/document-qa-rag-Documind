@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     chunk_overlap: int = 100
 
     embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
+    
+    chunk_size: int = 1000
+    chunk_overlap: int = 200
 
     model_config = SettingsConfigDict(
         env_file=".env",
