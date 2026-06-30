@@ -14,7 +14,6 @@ class Settings(BaseSettings):
     processed_dir: Path = Path("processed") #extracted plain text files
     allowed_extensions: set[str] = {".pdf", ".docx", ".txt", ".html", ".md"}
     max_file_size_mb: int =20
-    chunk_overlap: int = 100
 
     embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     
@@ -25,9 +24,13 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
     )
+    llm_provider: str = "groq"
 
     groq_api_key: str | None = None
     groq_model_name: str = "llama-3.1-8b-instant"
+    
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.1"
 
     cors_origins: list[str] = [
         "http://localhost:5173",
