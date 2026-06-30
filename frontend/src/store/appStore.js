@@ -228,6 +228,14 @@ toggleSelectedDocument: (documentId) => {
     }
   })
 },
+setChatMessages: (updater) => {
+  set((state) => ({
+    chatMessages:
+      typeof updater === 'function'
+        ? updater(state.chatMessages)
+        : updater,
+  }))
+},
 
 clearChat: () => {
   set({

@@ -19,6 +19,13 @@ class LLMService:
             max_tokens=500,
         )
 
+    def stream_answer(self, question: str, context: str):
+        prompt = self._build_prompt(question=question, context=context)
+
+        for chunk in self.llm.stream(prompt):
+            if chunk.content:
+                yield chunk.content
+
     def generate_answer(
         self,
         question: str,
