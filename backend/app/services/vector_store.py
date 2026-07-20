@@ -9,7 +9,9 @@ from app.services.embedding import get_embedding_service
 
 class VectorStore:
     def __init__(self) -> None:
-        self.dimension = 384
+        embedding_service = get_embedding_service()
+
+        self.dimension = embedding_service.get_dimension()
         self.index = faiss.IndexFlatIP(self.dimension)
         self.chunks: list[dict[str, Any]] = []
 
@@ -22,6 +24,12 @@ class VectorStore:
         embedding_service = get_embedding_service()
         embeddings = embedding_service.embed_texts(texts)
         vectors = np.array(embeddings, dtype="float32")
+        if vectors.shape[1] != self.dimension:
+            raise ValueError(
+                f"Embedding dimension mismatch. "
+                f"FAISS index expects {self.dimension}, "
+                f"but model returned {vectors.shape[1]}."
+            )
 
         self.index.add(vectors)
         self.chunks.extend(chunks)
