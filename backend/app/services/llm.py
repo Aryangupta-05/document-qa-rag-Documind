@@ -9,7 +9,7 @@ from app.config import settings
 
 
 class BaseLLMService:
-    def generate_answer(
+    def generate_answer( #generate_ans exectued when its children doesn't impplemetnt the obj generate_ans
         self,
         question: str,
         context_chunks: list[dict[str, Any]],
@@ -66,7 +66,7 @@ Rules:
         ]
 
 
-class GroqLLMService(PromptMixin, BaseLLMService):
+class GroqLLMService(PromptMixin, BaseLLMService): #parents are PromptMixin & BaseLLMservice
     def __init__(self) -> None:
         if not settings.groq_api_key:
             raise RuntimeError("GROQ_API_KEY is not configured.")
