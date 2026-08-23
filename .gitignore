@@ -18,3 +18,6 @@ node_modules/
 dist/
 
 backend/processed/
+
+backend/chroma_data/
+chroma_data/

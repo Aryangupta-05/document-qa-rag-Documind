@@ -6,11 +6,14 @@ export const useAppStore = create((set) => ({
   ragStatus: null,
   isLoadingStatus: false,
   statusError: null,
+
   documents: [],
   isLoadingDocuments: false,
   documentsError: null,
+
   isUploadingDocument: false,
   uploadError: null,
+
   chatMessages: [],
   isAskingQuestion: false,
   questionError: null,
@@ -21,6 +24,7 @@ export const useAppStore = create((set) => ({
   isLoadingAnalytics: false,
   analyticsError: null,
   selectedDocumentIds: [],
+  
   isRebuildingIndex: false,
   rebuildIndexError: null,
   lastRebuildResult: null,
