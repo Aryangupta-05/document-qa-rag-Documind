@@ -68,6 +68,7 @@ export const queryApi = {
     question,
     topK = 3,
     documentIds = [],
+    history = [],
     onSources,
     onToken,
     onDone,
@@ -82,6 +83,7 @@ export const queryApi = {
         question,
         top_k: topK,
         document_ids: documentIds,
+        history: history,
       }),
     })
 

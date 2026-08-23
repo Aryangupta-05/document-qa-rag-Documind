@@ -20,9 +20,10 @@ router = APIRouter(
 
 
 class AskRequest(BaseModel):
-    question: str = Field(..., min_length=3)
+    question: str = Field(..., min_length=1)
     top_k: int = Field(default=3, ge=1, le=10)
     document_ids: list[str] | None = None
+    history: list[dict] | None = None
 
 
 def save_query_history(
@@ -186,6 +187,7 @@ def ask_question_stream(
             for token in llm_service.stream_answer(
                 question=request.question,
                 context=context,
+                history=request.history,
             ):
                 full_answer += token
 
@@ -228,7 +230,7 @@ def ask_question_stream(
 
             error_payload = {
                 "type": "error",
-                "message": "Streaming answer failed.",
+                "message": f"Streaming answer failed: {str(error)}",
             }
             yield f"data: {json.dumps(error_payload)}\n\n"
 

@@ -61,10 +61,16 @@ function ChatPanel() {
     ])
 
     try {
+      // Collect completed messages from current session (exclude the streaming placeholder)
+      const sessionHistory = chatMessages
+        .filter((m) => !m.isStreaming && m.content)
+        .map((m) => ({ role: m.role, content: m.content }))
+
       await queryApi.askQuestionStream({
         question: trimmedQuestion,
         topK: 3,
         documentIds: selectedDocumentIds,
+        history: sessionHistory,
 
         onSources: (sources) => {
           updateLastAssistantMessage((lastMessage) => ({

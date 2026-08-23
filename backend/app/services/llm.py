@@ -20,6 +20,7 @@ class BaseLLMService:
         self,
         question: str,
         context: str,
+        history: list[dict] | None = None,
     ) -> Iterator[str]:
         raise NotImplementedError
 
@@ -41,18 +42,30 @@ class PromptMixin:
 
         return "\n\n".join(context_parts)
 
-    def _build_prompt(self, question: str, context: str) -> str:
+    def _build_prompt(self, question: str, context: str, history: list[dict] | None = None) -> str:
+        history_section = ""
+        if history:
+            lines = []
+            for msg in history:
+                role = "User" if msg.get("role") == "user" else "Assistant"
+                content = msg.get("content", "").strip()
+                if content:
+                    lines.append(f"{role}: {content}")
+            if lines:
+                history_section = "\nCONVERSATION HISTORY (current session):\n" + "\n".join(lines) + "\n"
+
         return f"""
 Use the document context below to answer the question.
 
 DOCUMENT CONTEXT:
 {context}
-
-QUESTION:
+{history_section}
+CURRENT QUESTION:
 {question}
 
 Rules:
 - Answer only from the provided context.
+- Use the conversation history to understand follow-up questions.
 - If the context does not contain the answer, say you do not have enough information.
 - Be clear and concise.
 """.strip()
@@ -98,8 +111,9 @@ class GroqLLMService(PromptMixin, BaseLLMService): #parents are PromptMixin & Ba
         self,
         question: str,
         context: str,
+        history: list[dict] | None = None,
     ) -> Iterator[str]:
-        prompt = self._build_prompt(question=question, context=context)
+        prompt = self._build_prompt(question=question, context=context, history=history)
 
         for chunk in self.llm.stream(self._build_messages(prompt)):
             if chunk.content:
@@ -134,8 +148,9 @@ class OllamaLLMService(PromptMixin, BaseLLMService):
         self,
         question: str,
         context: str,
+        history: list[dict] | None = None,
     ) -> Iterator[str]:
-        prompt = self._build_prompt(question=question, context=context)
+        prompt = self._build_prompt(question=question, context=context, history=history)
 
         for chunk in self.llm.stream(self._build_messages(prompt)):
             if chunk.content:
