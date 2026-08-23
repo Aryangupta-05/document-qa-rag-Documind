@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     llm_provider: str = "groq"
 
     groq_api_key: str | None = None
-    groq_model_name: str = "llama-3.1-8b-instant"
+    groq_model_name: str = "allam-2-7b"
     
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.1"
