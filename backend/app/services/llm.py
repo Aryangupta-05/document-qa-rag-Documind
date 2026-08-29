@@ -24,6 +24,9 @@ class BaseLLMService:
     ) -> Iterator[str]:
         raise NotImplementedError
 
+    def generate_follow_ups(self, answer_text: str) -> list[str]:
+        raise NotImplementedError
+
 
 class PromptMixin:
     def _build_context(self, chunks: list[dict[str, Any]]) -> str:
@@ -55,7 +58,7 @@ class PromptMixin:
                 history_section = "\nCONVERSATION HISTORY (current session):\n" + "\n".join(lines) + "\n"
 
         return f"""
-Use the document context below to answer the question.
+You are a helpful and intelligent AI assistant. Use the document context and conversation history to answer the user's question.
 
 DOCUMENT CONTEXT:
 {context}
@@ -63,11 +66,10 @@ DOCUMENT CONTEXT:
 CURRENT QUESTION:
 {question}
 
-Rules:
-- Answer only from the provided context.
-- Use the conversation history to understand follow-up questions.
-- If the context does not contain the answer, say you do not have enough information.
-- Be clear and concise.
+Instructions:
+- Provide a direct, helpful answer using the context.
+- You can infer meaning (e.g., marks = CGPA, grades).
+- Only say you do not have enough information if the answer is completely missing from the context.
 """.strip()
 
     def _build_messages(self, prompt: str) -> list:
@@ -119,6 +121,19 @@ class GroqLLMService(PromptMixin, BaseLLMService): #parents are PromptMixin & Ba
             if chunk.content:
                 yield str(chunk.content)
 
+    def generate_follow_ups(self, answer_text: str) -> list[str]:
+        prompt = f"""
+Given this answer provided to a user, suggest exactly 3 short, relevant follow-up questions they might ask next.
+Return ONLY the 3 questions, one per line, with no numbers, bullets, or intro text.
+
+ANSWER:
+{answer_text}
+""".strip()
+        response = self.llm.invoke([HumanMessage(content=prompt)])
+        content = str(response.content).strip().replace('\\n', '\n')
+        questions = [q.lstrip("- *1234567890.").strip() for q in content.split('\n') if q.strip()]
+        return questions[:3]
+
 
 class OllamaLLMService(PromptMixin, BaseLLMService):
     def __init__(self) -> None:
@@ -155,6 +170,19 @@ class OllamaLLMService(PromptMixin, BaseLLMService):
         for chunk in self.llm.stream(self._build_messages(prompt)):
             if chunk.content:
                 yield str(chunk.content)
+
+    def generate_follow_ups(self, answer_text: str) -> list[str]:
+        prompt = f"""
+Given this answer provided to a user, suggest exactly 3 short, relevant follow-up questions they might ask next.
+Return ONLY the 3 questions, one per line, with no numbers, bullets, or intro text.
+
+ANSWER:
+{answer_text}
+""".strip()
+        response = self.llm.invoke([HumanMessage(content=prompt)])
+        content = str(response.content).strip().replace('\\n', '\n')
+        questions = [q.lstrip("- *1234567890.").strip() for q in content.split('\n') if q.strip()]
+        return questions[:3]
 
 
 @lru_cache

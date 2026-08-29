@@ -21,7 +21,7 @@ router = APIRouter(
 
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=1)
-    top_k: int = Field(default=3, ge=1, le=10)
+    top_k: int = Field(default=5, ge=1, le=20)
     document_ids: list[str] | None = None
     history: list[dict] | None = None
 
@@ -238,6 +238,16 @@ def ask_question_stream(
         event_stream(),
         media_type="text/event-stream",
     )
+
+
+class FollowUpRequest(BaseModel):
+    answer_text: str = Field(..., min_length=1)
+
+@router.post("/follow-ups")
+def get_follow_ups(request: FollowUpRequest):
+    llm_service = get_llm_service()
+    questions = llm_service.generate_follow_ups(request.answer_text)
+    return {"follow_ups": questions}
 
 
 @router.get("/history", response_model=QueryHistoryListResponse)
