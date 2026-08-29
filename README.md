@@ -1,8 +1,8 @@
 # 📄 DocuMind AI
 
-**DocuMind AI** is a full-stack **RAG (Retrieval-Augmented Generation)** document assistant. Upload documents, ask questions in natural language, and get streaming, document-grounded answers powered by semantic search and LLMs.
+**DocuMind AI** is a full-stack **RAG (Retrieval-Augmented Generation)** document assistant. Upload documents, ask questions in natural language, and get streaming, document-grounded answers powered by semantic search and LLMs — with multi-turn conversation memory and smart follow-up suggestions.
 
-> Upload → Extract → Chunk → Embed → Retrieve → Generate → Stream
+> Upload → Extract → Chunk → Embed → Retrieve → Generate → Stream → Suggest
 
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&logoColor=white)
@@ -36,7 +36,7 @@
 
 ## Overview
 
-DocuMind AI lets users upload documents in multiple formats, automatically extracts and chunks their text, generates vector embeddings, and stores them in a FAISS index for fast semantic retrieval. When a user asks a question, the app retrieves the most relevant chunks and passes them to an LLM (Groq or a local Ollama model) to generate a grounded, streamed answer — with full query history and usage analytics.
+DocuMind AI lets users upload documents in multiple formats, automatically extracts and chunks their text, generates vector embeddings, and stores them in a FAISS index for fast semantic retrieval. When a user asks a question, the app retrieves the most relevant chunks and passes them — along with the full session conversation history — to an LLM (Groq or a local Ollama model) to generate a grounded, streamed answer. After each answer, the app asynchronously generates 3 smart follow-up questions as clickable suggestions, enabling a natural, guided conversation flow.
 
 ## Features
 
@@ -45,10 +45,12 @@ DocuMind AI lets users upload documents in multiple formats, automatically extra
 - 📝 Text extraction with processed text storage
 - ✂️ LangChain recursive text chunking
 - 🧠 HuggingFace SentenceTransformer embeddings
-- 🔍 FAISS semantic vector search
+- 🔍 FAISS semantic vector search with configurable top-k retrieval
 - 💬 RAG-based, document-grounded answer generation
-- ⚡ Streaming answers via SSE-style `fetch` streaming
+- ⚡ Streaming answers via SSE-style `fetch` streaming (~0.4s time-to-first-token on Groq)
 - 🔀 Multi-provider LLM support: **Groq** and **Ollama**
+- 🗣️ **Multi-turn conversation memory** — full session chat history injected into every LLM request
+- ✨ **Smart Follow-Up Suggestions** — 3 clickable follow-up questions generated asynchronously after each answer
 - 🎯 Selected-document chat (scope Q&A to a specific document)
 - 🕓 Query history
 - 📊 Analytics dashboard
@@ -103,21 +105,23 @@ flowchart TD
     G --> H["Store Vectors In FAISS"]
 
     I["Ask Question"] --> J["Embed Question"]
-    J --> K["Search FAISS"]
+    J --> K["Search FAISS (top-5 chunks)"]
     K --> L["Retrieve Relevant Chunks"]
-    L --> M["Build Prompt"]
+    L --> M["Build Prompt (+ session history)"]
     M --> N["Groq/Ollama Generates Answer"]
     N --> O["Stream Answer To UI"]
     O --> P["Save Query History"]
+    O --> Q["Generate 3 Follow-Up Suggestions"]
+    Q --> R["Display as Clickable Pills in UI"]
 ```
 
 ## Backend Responsibilities
 
-FastAPI handles document upload, validation, extraction, chunking, embedding, FAISS indexing, RAG answering, streaming responses, query history, analytics, document deletion, processed text preview, and database communication.
+FastAPI handles document upload, validation, extraction, chunking, embedding, FAISS indexing, RAG answering with multi-turn session history, streaming responses, smart follow-up question generation via `/query/follow-ups`, query history, analytics, document deletion, processed text preview, and database communication.
 
 ## Frontend Responsibilities
 
-React handles the dashboard, document list, upload UI, selected-document chat, streaming chat output, query history, analytics, processed text preview, notifications, delete confirmation, and rebuild-index controls.
+React handles the dashboard, document list, upload UI, selected-document chat, streaming chat output with session history tracking, smart follow-up suggestion pills (clickable to auto-submit), query history, analytics, processed text preview, notifications, delete confirmation, and rebuild-index controls.
 
 ## Important Project Behavior
 
@@ -126,6 +130,8 @@ React handles the dashboard, document list, upload UI, selected-document chat, s
 - The FAISS index lives in memory.
 - On backend startup, the app can rebuild the FAISS index from processed text.
 - Streaming answers are served from `/query/ask-stream`.
+- **Session chat history** is maintained in React state and sent with every request — it is not persisted to the database.
+- **Follow-up suggestions** are generated by a separate background call to `/query/follow-ups` after the stream completes.
 - The active LLM provider is selected via the backend `.env` file.
 
 ---
@@ -141,7 +147,7 @@ DATABASE_URL=your_postgresql_pooler_url
 
 LLM_PROVIDER=groq
 GROQ_API_KEY=your_groq_key
-GROQ_MODEL_NAME=llama-3.1-8b-instant
+GROQ_MODEL_NAME=allam-2-7b
 
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.1
@@ -256,7 +262,8 @@ All endpoints are prefixed with `API_PREFIX` (default: `/api/v1`).
 | `DELETE` | `/documents/{document_id}` | Delete a document |
 | `POST` | `/documents/rebuild-index` | Manually rebuild the FAISS index |
 | `POST` | `/query/ask` | Ask a question (non-streaming) |
-| `POST` | `/query/ask-stream` | Ask a question (streaming response) |
+| `POST` | `/query/ask-stream` | Ask a question (streaming, with session history) |
+| `POST` | `/query/follow-ups` | Generate 3 follow-up question suggestions from an answer |
 | `GET` | `/query/history` | Retrieve query history |
 | `GET` | `/analytics/stats` | Retrieve usage analytics |
 
