@@ -144,6 +144,13 @@ export const queryApi = {
     const response = await api.get('/query/history')
     return response.data
   },
+
+  getFollowUps: async (answerText) => {
+    const response = await api.post('/query/follow-ups', {
+      answer_text: answerText,
+    })
+    return response.data
+  },
 }
 
 export const analyticsApi = {

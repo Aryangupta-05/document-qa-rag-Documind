@@ -7,6 +7,7 @@ function ChatPanel() {
   const [question, setQuestion] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamError, setStreamError] = useState('')
+  const [followUps, setFollowUps] = useState([])
 
   const {
     chatMessages,
@@ -26,14 +27,19 @@ function ChatPanel() {
     })
   }
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
+  const handleSubmit = async (eventOrText) => {
+    if (eventOrText && eventOrText.preventDefault) {
+      eventOrText.preventDefault()
+    }
 
-    const trimmedQuestion = question.trim()
+    const rawText = typeof eventOrText === 'string' ? eventOrText : question
+    const trimmedQuestion = rawText.trim()
 
     if (!trimmedQuestion || isStreaming) {
       return
     }
+
+    setFollowUps([])
 
     const userMessage = {
       id: crypto.randomUUID(),
@@ -68,7 +74,7 @@ function ChatPanel() {
 
       await queryApi.askQuestionStream({
         question: trimmedQuestion,
-        topK: 3,
+        topK: 5,
         documentIds: selectedDocumentIds,
         history: sessionHistory,
 
@@ -86,11 +92,26 @@ function ChatPanel() {
           }))
         },
 
-        onDone: () => {
-          updateLastAssistantMessage((lastMessage) => ({
-            ...lastMessage,
-            isStreaming: false,
-          }))
+        onDone: async () => {
+          let finalAnswer = ''
+          updateLastAssistantMessage((lastMessage) => {
+            finalAnswer = lastMessage.content
+            return {
+              ...lastMessage,
+              isStreaming: false,
+            }
+          })
+
+          try {
+            if (finalAnswer) {
+              const res = await queryApi.getFollowUps(finalAnswer)
+              if (res && res.follow_ups) {
+                setFollowUps(res.follow_ups)
+              }
+            }
+          } catch (e) {
+            console.error('Failed to get follow ups:', e)
+          }
         },
 
         onError: (message) => {
@@ -222,6 +243,21 @@ function ChatPanel() {
 
       {streamError && (
         <p className="mb-3 text-sm text-red-600">{streamError}</p>
+      )}
+
+      {followUps.length > 0 && !isStreaming && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {followUps.map((q, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleSubmit(q)}
+              disabled={isStreaming}
+              className="px-3 py-1.5 text-xs text-left bg-blue-50 text-blue-700 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors"
+            >
+              ✨ {q}
+            </button>
+          ))}
+        </div>
       )}
 
       <form onSubmit={handleSubmit} className="flex gap-3">
